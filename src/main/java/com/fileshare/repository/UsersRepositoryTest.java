@@ -12,6 +12,11 @@ public interface UsersRepositoryTest extends JpaRepository<UserEntity,Integer> {
 
 
     @Query("SELECT t FROM UserEntity t WHERE t.userName = :userName")
-    UserEntity findByUserName(@Param("userName")String userName);
+    UserEntity[] findByUserName(@Param("userName") String userName);
+
+
+
+    @Query("SELECT t FROM UserEntity t WHERE t.userName = :userName")
+    UserEntity findUniqueByUserName(@Param("userName") String userName);
 
 }

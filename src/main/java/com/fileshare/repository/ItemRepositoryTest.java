@@ -1,7 +1,6 @@
 package com.fileshare.repository;
 
 import com.fileshare.model.ItemEntity;
-import com.fileshare.model.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

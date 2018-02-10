@@ -1,10 +1,9 @@
 package com.fileshare.controller;
 
 import com.fileshare.model.ItemEntity;
-import com.fileshare.model.ItemStatus;
 import com.fileshare.model.UserEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hibernate.Session;
+import com.fileshare.service.FileShareDataService;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +24,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ItemController {
 
     @Autowired
+    private FileShareDataService fileShareDataService;
+
+    @Autowired
     private ItemRepository itemRepository;
 
     @Autowired
@@ -38,109 +40,71 @@ public class ItemController {
     private  HibernateAwareObjectMapper hibernateAwareObjectMapper = new HibernateAwareObjectMapper();
 
 
-@Transactional
+    @Transactional
     @RequestMapping(value = "/createUsers", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<UserEntity>> createUsers(@RequestBody List<UserEntity> usersList) throws IOException {
-
-//                UserEntity[] userEntities = mapper.readValue(usersList,
-//                        UserEntity[].class);
-        usersList.forEach(user -> {usersRepository.saveOrUpdate(user);});
+    fileShareDataService.createUser(usersList);
     	return new ResponseEntity<List<UserEntity>>(usersList,HttpStatus.OK);
     }
 
     @RequestMapping(value = "/createUser", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<UserEntity> createUsers(@RequestBody UserEntity user) {
-//
-//        usersRepository.saveOrUpdate(user);
 
-        Session session = sessionFactory.openSession();
-//            item.setSharedBy(null);
-        session.flush();
-        session.clear();
-        session.saveOrUpdate(user);
-        session.flush();
-
-        session.close();
+        fileShareDataService.createUsers(user);
 
         return new ResponseEntity<UserEntity>(user,HttpStatus.OK);
     }
-@Transactional
+
+    @Transactional
     @RequestMapping(value = "/items/createItemsToShare", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createItemToShare(@RequestBody ArrayList<ItemEntity> itemList) throws IOException {
+    public ResponseEntity<List<ItemEntity>> createItemsToShare(@RequestBody ArrayList<ItemEntity> itemList) throws IOException {
 
-//        Group group = mapper.readValue(mapper.writeValueAsString(groupRepository.searchByGroupName(groupName)),
-//                Group.classss);
-//        itemList.forEach(item -> {usersRepository.save(item.getUserOwned());});
+        List<ItemEntity> itemEntities = fileShareDataService.createItemsToShare(itemList);
 
-//    itemList.forEach(item -> {item.setUserOwned();});
-
-        itemList.forEach(item -> {
-
-
-
-            Session session = sessionFactory.openSession();
-//            item.setSharedBy(null);
-            session.flush();
-            session.clear();
-            session.saveOrUpdate(item);
-            session.flush();
-
-            session.close();
-
-//            itemRepository.flush(); itemRepository.(item);
-
-        });
-        return new ResponseEntity<>(itemList, HttpStatus.OK);
+        return new ResponseEntity<List<ItemEntity>>(itemEntities, HttpStatus.OK);
     }
 
 
     @RequestMapping(value = "/items/createItemToShare", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createItemToShare(@RequestBody UserEntity user) throws IOException {
-//            usersRepository.save(user);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @Transactional
     @RequestMapping(value = "/items/removeItem", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> removeItem(@RequestBody ItemEntity itemEntity) throws IOException {
+    public ResponseEntity<Boolean> removeItem(@RequestBody ItemEntity itemEntity) throws IOException {
             itemRepository.delete(itemEntity);
-        return new ResponseEntity<>(true, HttpStatus.OK);
+        return new ResponseEntity<Boolean>(true, HttpStatus.OK);
     }
 
     @Transactional
     @RequestMapping(value = "/users", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getUsers() throws IOException {
+    public ResponseEntity<UserEntity[]> getUsers() throws IOException {
 
-        List<UserEntity> userEntity = usersRepository.findAll();
+        UserEntity[] itemEntities = fileShareDataService.users();
 
-        UserEntity [] countries = userEntity.toArray(new UserEntity[userEntity.size()]);
-
-        return new ResponseEntity<>(countries, HttpStatus.OK);
+        return new ResponseEntity<UserEntity[]>(itemEntities, HttpStatus.OK);
     }
 
     @Transactional
     @RequestMapping(value = "/items", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ItemEntity>> getItems() throws IOException {
-        List<ItemStatus> itemStatusList = new ArrayList<>();
-        List<ItemEntity> itemEntities = itemRepository.findAll();
 
-//        ItemEntity [] itemEntity = itemEntities.toArray(new ItemEntity[itemEntities.size()]);
-//        String finalString = hibernateAwareObjectMapper.writeValueAsString(itemEntities);
-
-//        for (ItemEntity itemEntity: itemEntities
-//             ) {
-//            ItemStatus itemStatus = new ItemStatus();
-//            itemStatus.setItemId(itemEntity.getItemId());
-//            itemStatus.setItemName(itemEntity.getItemName());
-//            itemStatus.setOwnerId(itemEntity.getOwnerId());
-//            itemStatus.setOwnerName(itemEntity.getUserOwned().getUserName());
-//            itemStatus.setSharedByUserId(itemEntity.getSharedByUserId());
-//            itemStatus.setSharedByUserName(itemEntity.getUserShared().getUserName());
-//
-//            itemStatusList.add(itemStatus);
-//        }
+        List<ItemEntity> itemEntities = fileShareDataService.items();
 
         return new ResponseEntity<>(itemEntities, HttpStatus.OK);
+    }
+
+    @Transactional
+    @RequestMapping(value = "/deleteAllItems", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
+    public void deleteItems() throws IOException {
+        itemRepository.deleteByQuery("delete from ItemEntity");
+    }
+
+    @Transactional
+    @RequestMapping(value = "/deleteAllUsers", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
+    public void deleteUsers() throws IOException {
+        usersRepository.deleteByQuery("delete from UserEntity");
     }
 
 }
